@@ -2,6 +2,7 @@ from typing import Dict, List
 from autogen import ConversableAgent
 import sys
 import os
+from math import sqrt
 
 def fetch_restaurant_data(restaurant_name: str) -> Dict[str, List[str]]:
     with open("restaurantes.txt", "r") as file:  
@@ -30,6 +31,15 @@ def fetch_restaurant_data(restaurant_name: str) -> Dict[str, List[str]]:
 
 
 def calculate_overall_score(restaurant_name: str, food_scores: List[int], customer_service_scores: List[int]) -> Dict[str, float]:
+    score = 0.0
+    N = len(food_scores)  #quantidade de escores (para cada avaliação) a respeito da comida = quantidade de escores de atendimento
+    for i in range(N):
+        score += sqrt(food_scores[i]**2 * customer_service_scores[i]) * 1/(N * sqrt(125)) * 10  #score final = media geometrica
+                                                                                                #(valoriza mais a qualidade da comida)
+    score = round(score, 3)  #arredonda o score para 3 casas decimais
+
+    return {restaurant_name: score}
+    
     # TODO
     # Esta função recebe o nome de um restaurante, uma lista de notas da comida (de 1 a 5) e uma lista de notas do atendimento ao cliente (de 1 a 5).
     # A saída deve ser uma pontuação entre 0 e 10, calculada da seguinte forma:
