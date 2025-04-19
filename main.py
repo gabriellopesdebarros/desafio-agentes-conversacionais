@@ -74,6 +74,7 @@ def main(user_query: str):
                                         d) 4/5: bom, agradável, satisfatório. 
                                         e) 5/5: incrível, impressionante, surpreendente.
                                         Para cada frase atribua um único valor de escore.
+                                        Se estiver em dúvida quanto ao valor do escore para uma frase, atribua o menor dentre eles.
                                         Retorne uma lista para os escores relativos à qualidade de atendimento 
                                         e outra lista para os escores relativos à comida"""
     
