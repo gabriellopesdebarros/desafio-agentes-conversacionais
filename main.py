@@ -5,23 +5,24 @@ import os
 from math import sqrt
 
 def fetch_restaurant_data(restaurant_name: str) -> Dict[str, List[str]]:
+    # Essa funcao realiza a busca pelas avaliacoes de um restaurante especifico em um arquivo (restaurante.txt)
+    # e retorna um dicionario com a frases avaliativas separadas por '.'
     with open("restaurantes.txt", "r") as file:  
-        dict_reviews = {}
+        dict_reviews = {restaurant_name: []}
         for line in file:
-            name, reviews = line.strip().split(". ", 1)  #separa o nome do restaurante das suas reviews na linha
-            sep_reviews = reviews.strip().split(". ")   #separa as reviews presentes na mesma linha (separadas por '. ')
+            name, reviews = line.strip().split(". ", 1)  #separa o nome do restaurante das suas reviews na linha 
             
-            for r in range(len(sep_reviews) - 1):  #colocando '.' nas reviews que nao estao no final da linha
-                sep_reviews[r] += '.'
-            
-            if name not in dict_reviews:
-                dict_reviews[name] = []
-            dict_reviews[name].extend(sep_reviews)   #adiciona as reviews da linha no dicionario
+            if name == restaurant_name:
+                sep_reviews = reviews.strip().split(". ")   #separa as reviews presentes na mesma linha (separadas por '. ')
+                for r in range(len(sep_reviews) - 1):  #colocando '.' nas reviews que nao estao no final da linha
+                    sep_reviews[r] += '.'
+                dict_reviews[name].extend(sep_reviews)   #adiciona as reviews da linha no dicionario (name == restaurant_name)
              
     return {restaurant_name: dict_reviews[restaurant_name]}  #dicionario com o nome do restaurante desejado e suas reviews
 
 
 def calculate_overall_score(restaurant_name: str, food_scores: List[int], customer_service_scores: List[int]) -> Dict[str, float]:
+    # Essa funcao calcula o score final de um restaurante a partir de uma lista com scores de 'comida' e outra com scores de 'atendimento'
     score = 0.0
     N = len(food_scores)  #quantidade de escores (para cada avaliação) a respeito da comida = quantidade de escores de atendimento
     for i in range(N):
