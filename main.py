@@ -83,7 +83,38 @@ def main(user_query: str):
 
     # TODO
     # Crie mais agentes aqui.
+    data_fetch_agent_sys_message = """Você é um agente de IA que retorna as informações a respeito de um restaurante específico.
+                                    Para isso, você deve utilizar a função fetch_restaurant_data(). 
+                                    Essa função retorna um dicionario com a chave sendo 
+                                    o nome do restaurante e o valor uma lista com suas avaliações"""
 
+    data_fetch_agent = ConversableAgent("data_fetch_agent", 
+                                    system_message=data_fetch_agent_sys_message,
+                                    llm_config=llm_config)
+
+    review_analysis_agent_sys_message = """Você é um agente de IA que recebe frases de avaliações de um restaurante específico 
+                                        e converte adjetivos em escores. Use a seguinte escala:
+                                        a) 1/5: horrível, nojento, terrível. 
+                                        b) 2/5: ruim, desagradável, ofensivo. 
+                                        c) 3/5: mediano, sem graça, irrelevante. 
+                                        d) 4/5: bom, agradável, satisfatório. 
+                                        e) 5/5: incrível, impressionante, surpreendente.
+                                        Retorne uma lista para os escores relativos à qualidade de atendimento 
+                                        e outra lista para os escores relativos à comida"""
+    
+    review_analysis_agent = ConversableAgent("review_analysis_agent",
+                                         system_message=review_analysis_agent_sys_message,
+                                         llm_config=llm_config)
+    
+    score_agent_sys_message = """Você é um agente de IA que calcula e retorna a pontuação final da avaliação de um restaurante 
+                                a partir de uma lista de escores para o atendimento e outra lista para a comida. 
+                                Esse cálculo é feito com a função calculate_overall_score(). Após o cálculo, retorne o valor 
+                                do score geral com três casas decimais."""
+
+    score_agent = ConversableAgent("score_agent",
+                                   system_message=score_agent_sys_message,
+                                   llm_config=llm_config)
+    
 
     # TODO
     # Preencha o argumento de `initiate_chats` abaixo, chamando os agentes corretos sequencialmente.
