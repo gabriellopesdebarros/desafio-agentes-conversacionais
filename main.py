@@ -21,15 +21,6 @@ def fetch_restaurant_data(restaurant_name: str) -> Dict[str, List[str]]:
     return {restaurant_name: dict_reviews[restaurant_name]}  #dicionario com o nome do restaurante desejado e suas reviews
 
 
-    # TODO
-    # Esta função recebe o nome de um restaurante e retorna as avaliações desse restaurante.
-    # A saída deve ser um dicionário, onde a chave é o nome do restaurante e o valor é uma lista de avaliações desse restaurante.
-    # O "agente de busca de dados" deve ter acesso à assinatura desta função e deve ser capaz de sugeri-la como uma chamada de função.
-    # Exemplo:
-    # > fetch_restaurant_data("Estação Barão")
-    # {"Estação Barão's": ["A comida do Estação Barão foi mediana, sem nada particularmente marcante.", ...]}
-
-
 def calculate_overall_score(restaurant_name: str, food_scores: List[int], customer_service_scores: List[int]) -> Dict[str, float]:
     score = 0.0
     N = len(food_scores)  #quantidade de escores (para cada avaliação) a respeito da comida = quantidade de escores de atendimento
@@ -39,30 +30,7 @@ def calculate_overall_score(restaurant_name: str, food_scores: List[int], custom
     score = round(score, 3)  #arredonda o score para 3 casas decimais
 
     return {restaurant_name: score}
-    
-    # TODO
-    # Esta função recebe o nome de um restaurante, uma lista de notas da comida (de 1 a 5) e uma lista de notas do atendimento ao cliente (de 1 a 5).
-    # A saída deve ser uma pontuação entre 0 e 10, calculada da seguinte forma:
-    # SUM(sqrt(food_scores[i]**2 * customer_service_scores[i]) * 1/(N * sqrt(125)) * 10
-    # A fórmula acima é uma média geométrica das notas, que penaliza mais a qualidade da comida do que o atendimento ao cliente.
-    # Exemplo:
-    # > calculate_overall_score("Applebee's", [1, 2, 3, 4, 5], [1, 2, 3, 4, 5])
-    # {"Applebee's": 5.048}
-    # OBSERVAÇÃO: Certifique-se de que a pontuação inclui PELO MENOS 3 casas decimais. Os testes públicos só aceitarão pontuações 
-    # que tenham no mínimo 3 casas decimais.
-    pass
 
-def get_data_fetch_agent_prompt(restaurant_query: str) -> str:
-    # TODO
-    # Função auxiliar opcional.
-    # Pode ser útil organizar mensagens/prompts dentro de uma função que retorna uma string.
-    # Por exemplo, você pode usar esta função para retornar um prompt que o agente de busca de dados 
-    # usará para obter avaliações de um restaurante específico.
-    pass
-
-# TODO: sinta-se à vontade para escrever quantas funções adicionais quiser.
-
-# Não modifique a assinatura da função "main".
 def main(user_query: str):
     entrypoint_agent_system_message = f"""
     Você é um agente de IA que inicia e supervisiona uma conversa sequencial entre três outros agentes de IA. 
@@ -104,6 +72,7 @@ def main(user_query: str):
                                         c) 3/5: mediano, sem graça, irrelevante. 
                                         d) 4/5: bom, agradável, satisfatório. 
                                         e) 5/5: incrível, impressionante, surpreendente.
+                                        Para cada frase atribua um único valor de escore.
                                         Retorne uma lista para os escores relativos à qualidade de atendimento 
                                         e outra lista para os escores relativos à comida"""
     
@@ -123,14 +92,30 @@ def main(user_query: str):
     score_agent.register_for_llm(name="calculate_overall_score", description="Calcula o escore final da avaliação de um restaurante específico.")(calculate_overall_score)
     score_agent.register_for_execution(name="calculate_overall_score")(calculate_overall_score)
     
-
-
-    # TODO
-    # Preencha o argumento de `initiate_chats` abaixo, chamando os agentes corretos sequencialmente.
-    # Se você decidir usar outro padrão de conversação, sinta-se à vontade para ignorar este código.
-
-    # Descomente assim que iniciar o chat com pelo menos um agente.
-    # result = entrypoint_agent.initiate_chats([{}])
+    
+    result = entrypoint_agent.initiate_chats(
+        [
+            {
+                "recipient":data_fetch_agent, 
+                "message": user_query,
+                "max_turns":2,
+                "summary_method": "last_msg",
+            },
+            {
+                "recipient":review_analysis_agent,
+                "message": "Essas são as avaliações obtidas. Analise os adjetivos e retorne listas de escores (1 a 5) para 'comida' e 'atendimento'.",
+                "max_turns":1,
+                "summary_method": "last_msg",
+            },
+            {
+                "recipient":score_agent,
+                "message": "Essas são as listas de nota para 'comida' e para 'atendimento'.",
+                "max_turns":2,
+                "summary_method": "last_msg" ,
+            },
+        ]
+    )
+    print(result[-1].summary)
     
 # NÃO modifique o código abaixo.
 if __name__ == "__main__":
