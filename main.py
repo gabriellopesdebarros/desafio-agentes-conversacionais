@@ -80,6 +80,8 @@ def main(user_query: str):
     entrypoint_agent.register_for_llm(name="fetch_restaurant_data", description="Obtém as avaliações de um restaurante específico.")(fetch_restaurant_data)
     entrypoint_agent.register_for_execution(name="fetch_restaurant_data")(fetch_restaurant_data)
 
+    entrypoint_agent.register_for_llm(name="calculate_overall_score", description="Calcula o escore final da avaliação de um restaurante específico.")(calculate_overall_score)
+    entrypoint_agent.register_for_execution(name="calculate_overall_score")(calculate_overall_score)
 
     # TODO
     # Crie mais agentes aqui.
@@ -91,6 +93,9 @@ def main(user_query: str):
     data_fetch_agent = ConversableAgent("data_fetch_agent", 
                                     system_message=data_fetch_agent_sys_message,
                                     llm_config=llm_config)
+
+    data_fetch_agent.register_for_llm(name="fetch_restaurant_data", description="Obtém as avaliações de um restaurante específico.")(fetch_restaurant_data)
+    data_fetch_agent.register_for_execution(name="fetch_restaurant_data")(fetch_restaurant_data)
 
     review_analysis_agent_sys_message = """Você é um agente de IA que recebe frases de avaliações de um restaurante específico 
                                         e converte adjetivos em escores. Use a seguinte escala:
@@ -115,6 +120,10 @@ def main(user_query: str):
                                    system_message=score_agent_sys_message,
                                    llm_config=llm_config)
     
+    score_agent.register_for_llm(name="calculate_overall_score", description="Calcula o escore final da avaliação de um restaurante específico.")(calculate_overall_score)
+    score_agent.register_for_execution(name="calculate_overall_score")(calculate_overall_score)
+    
+
 
     # TODO
     # Preencha o argumento de `initiate_chats` abaixo, chamando os agentes corretos sequencialmente.
