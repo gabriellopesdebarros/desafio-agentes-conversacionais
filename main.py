@@ -64,18 +64,26 @@ def get_data_fetch_agent_prompt(restaurant_query: str) -> str:
 
 # Não modifique a assinatura da função "main".
 def main(user_query: str):
-    entrypoint_agent_system_message = "" # TODO
+    entrypoint_agent_system_message = f"""
+    Você é um agente de IA que inicia e supervisiona uma conversa sequencial entre três outros agentes de IA. 
+    Você passa as informações que um agente te retorna para o próximo e executa funções quando outro agente solicita. 
+    Ao final, responda o pedido do usuário: '{user_query}'."""
+
     # Exemplo de configuração de LLM para o agente de entrada
     llm_config = {"config_list": [{"model": "gpt-4o-mini", "api_key": os.environ.get("OPENAI_API_KEY")}]}
+
     # O agente principal de entrada/supervisor
     entrypoint_agent = ConversableAgent("entrypoint_agent", 
                                         system_message=entrypoint_agent_system_message, 
                                         llm_config=llm_config)
+    
     entrypoint_agent.register_for_llm(name="fetch_restaurant_data", description="Obtém as avaliações de um restaurante específico.")(fetch_restaurant_data)
     entrypoint_agent.register_for_execution(name="fetch_restaurant_data")(fetch_restaurant_data)
 
+
     # TODO
     # Crie mais agentes aqui.
+
 
     # TODO
     # Preencha o argumento de `initiate_chats` abaixo, chamando os agentes corretos sequencialmente.
