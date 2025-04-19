@@ -32,15 +32,15 @@ def calculate_overall_score(restaurant_name: str, food_scores: List[int], custom
     return {restaurant_name: score}
 
 def main(user_query: str):
-    entrypoint_agent_system_message = f"""
-    Você é um agente de IA que inicia e supervisiona uma conversa sequencial entre três outros agentes de IA. 
-    Você passa as informações que um agente te retorna para o próximo e executa funções quando outro agente solicita. 
-    Ao final, responda o pedido do usuário: '{user_query}'."""
-
-    # Exemplo de configuração de LLM para o agente de entrada
+    # Configuração de LLM para os agentes
     llm_config = {"config_list": [{"model": "gpt-4o-mini", "api_key": os.environ.get("OPENAI_API_KEY")}]}
 
     # O agente principal de entrada/supervisor
+    entrypoint_agent_system_message = f"""Você é um agente de IA que inicia e supervisiona uma conversa sequencial entre três outros agentes de IA. 
+                                        Você é um agente de IA que inicia e supervisiona uma conversa sequencial entre três outros agentes de IA. 
+                                        Você passa as informações que um agente te retorna para o próximo e executa funções quando outro agente solicita. 
+                                        Ao final, responda o pedido do usuário: '{user_query}'."""
+
     entrypoint_agent = ConversableAgent("entrypoint_agent", 
                                         system_message=entrypoint_agent_system_message, 
                                         llm_config=llm_config)
@@ -50,9 +50,8 @@ def main(user_query: str):
 
     entrypoint_agent.register_for_llm(name="calculate_overall_score", description="Calcula o escore final da avaliação de um restaurante específico.")(calculate_overall_score)
     entrypoint_agent.register_for_execution(name="calculate_overall_score")(calculate_overall_score)
-
-    # TODO
-    # Crie mais agentes aqui.
+    
+    # O agente que busca as informacoes do restaurante
     data_fetch_agent_sys_message = """Você é um agente de IA que retorna as informações a respeito de um restaurante específico.
                                     Para isso, você deve utilizar a função fetch_restaurant_data(). 
                                     Essa função retorna um dicionario com a chave sendo 
@@ -65,6 +64,7 @@ def main(user_query: str):
     data_fetch_agent.register_for_llm(name="fetch_restaurant_data", description="Obtém as avaliações de um restaurante específico.")(fetch_restaurant_data)
     data_fetch_agent.register_for_execution(name="fetch_restaurant_data")(fetch_restaurant_data)
 
+    # O agente que analisa e quantifica as avaliacoes
     review_analysis_agent_sys_message = """Você é um agente de IA que recebe frases de avaliações de um restaurante específico 
                                         e converte adjetivos em escores. Use a seguinte escala:
                                         a) 1/5: horrível, nojento, terrível. 
@@ -80,6 +80,7 @@ def main(user_query: str):
                                          system_message=review_analysis_agent_sys_message,
                                          llm_config=llm_config)
     
+    # O agente que calcula o score final do restaurante
     score_agent_sys_message = """Você é um agente de IA que calcula e retorna a pontuação final da avaliação de um restaurante 
                                 a partir de uma lista de escores para o atendimento e outra lista para a comida. 
                                 Esse cálculo é feito com a função calculate_overall_score(). Após o cálculo, retorne o valor 
@@ -92,14 +93,15 @@ def main(user_query: str):
     score_agent.register_for_llm(name="calculate_overall_score", description="Calcula o escore final da avaliação de um restaurante específico.")(calculate_overall_score)
     score_agent.register_for_execution(name="calculate_overall_score")(calculate_overall_score)
     
-    
-    result = entrypoint_agent.initiate_chats(
+    # Dialogo sequencial entre os agentes (mediado pelo entrypoint_agent)
+    result = entrypoint_agent.initiate_chats(   #nesse dialogo, o entrypoint eh o supervisor e mediador, 
+                                                #sendo responsavel tambem por executar as funcoes, chamadas pelos agentes 
         [
-            {
-                "recipient":data_fetch_agent, 
+            { 
+                "recipient":data_fetch_agent,  #primeira msg enviada pelo entrypoint_agent para o recipient
                 "message": user_query,
-                "max_turns":2,
-                "summary_method": "last_msg",
+                "max_turns":2,  
+                "summary_method": "last_msg",  #o resumo desse dialogo sera a ultima mensagem entre os agentes (feita pelo recipient)
             },
             {
                 "recipient":review_analysis_agent,
@@ -109,15 +111,16 @@ def main(user_query: str):
             },
             {
                 "recipient":score_agent,
-                "message": "Essas são as listas de nota para 'comida' e para 'atendimento'.",
+                "message": "Essas são as listas de nota para 'comida' e para 'atendimento'.", 
                 "max_turns":2,
                 "summary_method": "last_msg" ,
             },
         ]
     )
-    print(result[-1].summary)
+
+    print(result[-1].summary)  #imprime o resumo do dialogo (nesse caso eh a ultima msg do score_agent)
     
-# NÃO modifique o código abaixo.
+
 if __name__ == "__main__":
     assert len(sys.argv) > 1, "Certifique-se de incluir uma consulta para algum restaurante ao executar a função main."
     main(sys.argv[1])
